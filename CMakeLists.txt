@@ -2,15 +2,27 @@ cmake_minimum_required (VERSION 2.8...3.13)
 SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 SET (LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
-project ("EPANET")
+project ("EPANET_GA_OMP)")
+
+# Enable OpenMP
+find_package(OpenMP REQUIRED)
+if(OpenMP_CXX_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
+
 set_property( GLOBAL PROPERTY USE_FOLDERS ON)
-SET (CMAKE_C_FLAGS "-std=c99")
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+set(CMAKE_BUILD_TYPE Debug)
+
 if(MSVC)
 	# /Wall generated MANY warnings.  Defaulting to level 4, excluding C4100 (unreferenced formal parameter)
 	# and C4571 (structured exceptions no longer caught)
 	SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 	SET (CMAKE_CXX_FLAGS "/EHsc /W4 /wd4100 /wd4571")
-        add_definitions(-D_CRT_SECURE_NO_DEPRECATE)  
+	add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
 else()
 	# -I. is needed so gcc can find the generated export header
 	SET (CMAKE_CXX_FLAGS "-Wall -std=c++11")
@@ -150,9 +162,23 @@ source_group("Output" REGULAR_EXPRESSION "src/Output/.*")
 source_group("Solvers" REGULAR_EXPRESSION "src/Solvers/.*")
 source_group("Utilities" REGULAR_EXPRESSION "src/Utilities/.*")
 
-include_directories(src src/Core src/Elements src/Input src/Output src/Utilities src/Solvers)
+include_directories(src src/Calibration src/Core src/Elements src/Input src/Output src/Utilities src/Solvers)
 
-add_library(epanet3 SHARED ${epanet_lib_sources} ${epanet_lib_headers})
+#add_library(epanet3 SHARED ${epanet_lib_sources} ${epanet_lib_headers})
 
-add_executable(run-epanet3 src/CLI/main.cpp)
-target_link_libraries(run-epanet3 LINK_PUBLIC epanet3)
+# Add the shared library target
+add_library(epanet3 SHARED ${epanet_lib_sources})
+
+# Ensure the headers are included in the project
+add_custom_target(headers ALL SOURCES ${epanet_lib_headers})
+
+add_executable(run-epanet3 src/CLI/main.cpp src/Calibration/GeneticAlgorithm.cpp src/Calibration/Chromosome.cpp)
+
+# Link the EPANET library
+target_link_libraries(run-epanet3 PUBLIC OpenMP::OpenMP_CXX epanet3)
+
+# Link OpenMP libraries if found
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(run-epanet3 PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
