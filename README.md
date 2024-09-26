@@ -1,3 +1,5 @@
+## Introduction
+
 The Genetic Algorithm based calibration module introduced to EPANET 3 enables the calibration of hydraulic models of water distribution networks. In this context, 4 new files named GeneticAlgorithm.cpp, GeneticAlgorithm.h, Chromosome.cpp and Chromosome.h were generated in src. Through these files, the Observed.dat file in the Networks folder is read and the content of the Observed.dat file is compared with the content of the Simulated file produced by the model. The goal of the program is to converge the model outputs given in the Simulated file to those in the Observed file. Thus, the calibration process can be performed. 
 
 The Genetic Algorithm parameters such as the number of polulations, number of generations, mutation rate and crossover rate are in the main.cpp file and can be modified from there.
